@@ -1,0 +1,7 @@
+package com.payment_service.util.enums;
+
+public enum CardResponse {
+
+    PAYMENT_CONFIRMED, LIMIT_UNAVAILABLE, INVALID_CVV, INVALID_EXPIRATION_DATE, INVALID_CARD_NUMBER, CARD_EXPIRED, INVALID_CPF
+
+}
