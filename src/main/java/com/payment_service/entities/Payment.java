@@ -22,23 +22,22 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
-    private UUID id;
+    private UUID paymentId;
 
-    @Column(name = "card_number")
-    private String cardNumber;
+    @Column(name = "card_transaction_id")
+    private String cardTransactionId;
 
-    @Column(name = "value", precision = 15, scale = 4)
-    private BigDecimal value;
-
-    @Column(name = "cpf")
-    private String cpf;
-
-    @Column(name = "issue_date")
+    @Column(name = "transaction_date")
     @Temporal(TemporalType.TIMESTAMP)
-    private LocalDateTime issueDate;
+    private LocalDateTime transactionDate;
+
+    @Column(name = "payment_value", precision = 15, scale = 4)
+    private BigDecimal paymentValue;
 
     @Enumerated(value = EnumType.STRING)
-    @Column(name = "status")
-    private PaymentStatus status;
+    @Column(name = "payment_status")
+    private PaymentStatus paymentStatus;
+
+    private Card cardInformation;
 
 }

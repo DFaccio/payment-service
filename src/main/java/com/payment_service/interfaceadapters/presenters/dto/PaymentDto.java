@@ -1,6 +1,5 @@
 package com.payment_service.interfaceadapters.presenters.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payment_service.util.enums.PaymentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -16,20 +15,19 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-@JsonIgnoreProperties(value = {"id"}, allowGetters = true)
-public class ResponsePaymentDto {
+public class PaymentDto {
 
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
-    private UUID id;
+    private UUID paymentId;
 
-    private String cardNumber;
+    private String cardTransactionId;
 
-    private BigDecimal value;
+    private LocalDateTime transactionDate;
 
-    private String cpf;
+    private BigDecimal paymentValue;
 
-    private LocalDateTime issueDate;
+    private PaymentStatus paymentStatus;
 
-    private PaymentStatus status;
+    private CardDto cardInformation;
 
 }

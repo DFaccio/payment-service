@@ -17,12 +17,11 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Getter
 @Setter
-@JsonIgnoreProperties(value = {"id"}, allowGetters = true)
 public class RequestPaymentDto {
 
     @NotBlank
     @Schema(description = "CPF do portador do cartão", example = "43556112566")
-    @Size(min = 16, max = 16)
+    @Size(min = 11, max = 11)
     private String cpf;
 
     @NotBlank

@@ -1,6 +1,6 @@
 package com.payment_service.util.pagination;
 
-import com.payment_service.interfaceadapters.presenters.dto.ResponsePaymentDto;
+import com.payment_service.interfaceadapters.presenters.dto.PaymentDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,5 +12,5 @@ public class PagedResponse {
 
     private Pagination page;
 
-    private List<ResponsePaymentDto> data;
+    private List<PaymentDto> data;
 }
