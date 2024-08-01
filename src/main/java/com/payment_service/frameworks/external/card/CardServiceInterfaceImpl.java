@@ -1,5 +1,6 @@
 package com.payment_service.frameworks.external.card;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.payment_service.interfaceadapters.presenters.dto.PaymentDto;
@@ -9,6 +10,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -27,40 +29,48 @@ public class CardServiceInterfaceImpl implements CardServiceInterface{
     private final ObjectMapper mapper;
 
     @Value("${card.address}")
-    private final String cardAddress;
+    private String cardAddress;
 
     private static final String CARD_BASE_URL_PRODUCTS = "/api/v1/card";
 
-    private static final String CARD_POST_PAYMENT_URI = "/products/reservation";
-
     @Autowired
-    public CardServiceInterfaceImpl(WebClient.Builder webClientBuilder, ObjectMapper mapper, String productAddress) {
+    public CardServiceInterfaceImpl(WebClient.Builder webClientBuilder, ObjectMapper mapper) {
         this.webClientBuilder = webClientBuilder;
         this.mapper = mapper;
-        this.cardAddress = productAddress;
+        this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
     @Override
-    public Mono<ResponseEntity> validateCard(RequestPaymentDto requestPaymentDto) throws IOException{
+    public ResponseEntity<?> validateCard(RequestPaymentDto requestPaymentDto) throws IOException{
 
         return webClientBuilder.build()
                 .method(HttpMethod.GET)
                 .uri(cardAddress + CARD_BASE_URL_PRODUCTS)
                 .body(BodyInserters.fromValue(mapper.writeValueAsString(requestPaymentDto)))
                 .retrieve()
-                .bodyToMono(ResponseEntity.class);
+                .onStatus(HttpStatusCode::isError, clientResponse -> clientResponse
+                        .bodyToMono(String.class)
+                        .flatMap(errorBody -> Mono.error(new RuntimeException("Error: " + errorBody))
+                        )
+                )
+                .bodyToMono(ResponseEntity.class).block();
 
     }
 
     @Override
-    public Mono<ResponseEntity> newPayment(RequestPaymentDto requestPaymentDto) throws IOException {
+    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws IOException {
 
         return webClientBuilder.build()
                 .post()
                 .uri(cardAddress + CARD_BASE_URL_PRODUCTS)
                 .body(BodyInserters.fromValue(mapper.writeValueAsString(requestPaymentDto)))
                 .retrieve()
-                .bodyToMono(ResponseEntity.class);
+                .onStatus(HttpStatusCode::isError, clientResponse -> clientResponse
+                        .bodyToMono(String.class)
+                        .flatMap(errorBody -> Mono.error(new RuntimeException("Error: " + errorBody))
+                        )
+                )
+                .bodyToMono(ResponseEntity.class).block();
 
     }
 

@@ -10,8 +10,8 @@ import java.io.IOException;
 @Service
 public interface CardServiceInterface {
 
-    Mono<ResponseEntity> validateCard(RequestPaymentDto requestPaymentDto) throws IOException;
+    ResponseEntity<?> validateCard(RequestPaymentDto requestPaymentDto) throws IOException;
 
-    Mono<ResponseEntity> newPayment(RequestPaymentDto requestPaymentDto) throws IOException;
+    ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws IOException;
 
 }

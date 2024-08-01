@@ -1,8 +1,8 @@
 package com.payment_service.frameworks.web;
 
 import com.payment_service.interfaceadapters.controllers.PaymentController;
+import com.payment_service.interfaceadapters.presenters.dto.PaymentDto;
 import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
-import com.payment_service.util.exception.ValidationsException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -23,9 +23,9 @@ public class PaymentWeb {
     @Resource
     private PaymentController paymentController;
 
-    @PostMapping(consumes = "application/json", produces = "application/json")
-    @Operation(summary = "Adiciona um novo cartão")
-    public ResponseEntity<?> insert(@Valid @RequestBody RequestPaymentDto dto) throws IOException, ValidationsException {
+    @PostMapping(value="/newPayment", consumes = "application/json", produces = "application/json")
+    @Operation(summary = "Realiza um novo pagamento")
+    public ResponseEntity<?> newPayment(@Valid @RequestBody RequestPaymentDto dto) throws IOException{
 
         return paymentController.newPayment(dto);
 

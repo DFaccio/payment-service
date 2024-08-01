@@ -1,17 +1,17 @@
 package com.payment_service.interfaceadapters.controllers;
 
-import com.payment_service.frameworks.external.card.CardServiceInterface;
+import com.payment_service.entities.Payment;
 import com.payment_service.interfaceadapters.gateways.PaymentGateway;
+import com.payment_service.interfaceadapters.presenters.converters.PaymentConverter;
 import com.payment_service.interfaceadapters.presenters.dto.PaymentDto;
 import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
 import com.payment_service.usercase.PaymentBusiness;
-import com.payment_service.util.exception.ValidationsException;
 import jakarta.annotation.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Component
 public class PaymentController {
@@ -23,17 +23,19 @@ public class PaymentController {
     private PaymentBusiness paymentBusiness;
 
     @Resource
-    CardServiceInterface cardServiceInterface;
+    private PaymentConverter paymentConverter;
 
-    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws IOException, ValidationsException {
+    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws IOException{
 
-        ResponseEntity<?> cardResponse = cardServiceInterface.validateCard(requestPaymentDto).block();
+        ResponseEntity<?> responseEntity = paymentBusiness.newPayment(requestPaymentDto);
 
-        paymentBusiness.validateCardResponse(cardResponse);
+        Payment payment = paymentConverter.convert((PaymentDto) Objects.requireNonNull(responseEntity.getBody()));
 
-        PaymentDto paymentDto = null;
+        payment = paymentGateway.insert(payment);
 
-        return cardResponse.status(HttpStatus.CREATED).body(paymentDto);
+        responseEntity = paymentBusiness.toResponse(payment);
+
+        return responseEntity;
 
     }
 

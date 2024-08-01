@@ -14,17 +14,12 @@ public class StandardError {
 
     private int statusCode;
 
-    private String error;
-
     private String message;
 
-    private String path;
 
-    public StandardError(int statusCode, String error, String message, String path) {
+    public StandardError(int statusCode, String message) {
         this.statusCode = statusCode;
-        this.error = error;
         this.message = message;
-        this.path = path;
         this.time = LocalDateTime.now()
                 .atZone(ZoneId.of("America/Sao_Paulo"))
                 .toLocalDateTime();
