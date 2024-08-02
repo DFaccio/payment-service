@@ -1,7 +1,5 @@
 package com.payment_service.interfaceadapters.presenters.converters;
 
-import com.payment_service.entities.Card;
-import com.payment_service.interfaceadapters.presenters.dto.CardDto;
 import org.springframework.stereotype.Component;
 
 @Component

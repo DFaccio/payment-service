@@ -1,0 +1,10 @@
+{
+  "cpf": "43556112566",
+  "carNumber": "5568872479420825",
+  "paymentMethod": "Cartão de crédito",
+  "paymentDescription": "Compra de um livro",
+  "paymentValue": 150.00,
+  "transactionDate": "2024-08-08T23:59:590000",
+  "cardTransactionId": "54654654",
+  "paymentStatus": "CONFIRMED"
+}

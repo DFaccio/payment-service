@@ -20,14 +20,20 @@ public class PaymentDto {
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private UUID paymentId;
 
-    private String cardTransactionId;
+    private String cpf;
 
-    private LocalDateTime transactionDate;
+    private String cardNumber;
+
+    private String paymentMethod;
+
+    private String paymentDescription;
 
     private BigDecimal paymentValue;
 
-    private PaymentStatus paymentStatus;
+    private LocalDateTime transactionDate;
 
-    private CardDto cardInformation;
+    private String cardTransactionId;
+
+    private PaymentStatus paymentStatus;
 
 }

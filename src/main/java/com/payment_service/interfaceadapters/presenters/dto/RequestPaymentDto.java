@@ -29,11 +29,13 @@ public class RequestPaymentDto {
     @Size(min = 16, max = 16)
     private String cardNumber;
 
+    @NotBlank
     @Pattern(regexp = "^(0[1-9]|1[0-2])((\\d{2}|\\d{4}))$")
     @Schema(description = "Data de expiração do cartão", example = "0625")
     @Size(min = 4, max = 6)
     private String expirationDate;
 
+    @NotBlank
     @Pattern(regexp = "^([0-9]{3})$")
     @Schema(description = "CVV do cartão", example = "545")
     @Size(min = 3, max = 4)
@@ -42,5 +44,13 @@ public class RequestPaymentDto {
     @NotNull
     @Schema(description = "Valor do lançamento", example = "100.00")
     private BigDecimal value;
+
+    @NotBlank
+    @Schema(description = "Descrição do pagamento", example = "Compra de um livro")
+    private String paymentDescription;
+
+    @NotBlank
+    @Schema(description = "Método do pagamento", example = "Cartão de crédito")
+    private String paymentMethod;
 
 }

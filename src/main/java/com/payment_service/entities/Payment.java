@@ -24,20 +24,30 @@ public class Payment {
     @Column
     private UUID paymentId;
 
-    @Column(name = "card_transaction_id")
-    private String cardTransactionId;
+    @Column
+    private String cpf;
+
+    @Column
+    private String cardNumber;
+
+    @Column(name = "payment_method")
+    private String paymentMethod;
+
+    @Column(name = "payment_description")
+    private String paymentDescription;
+
+    @Column(name = "payment_value", precision = 15, scale = 4)
+    private BigDecimal paymentValue;
 
     @Column(name = "transaction_date")
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime transactionDate;
 
-    @Column(name = "payment_value", precision = 15, scale = 4)
-    private BigDecimal paymentValue;
+    @Column(name = "card_transaction_id")
+    private String cardTransactionId;
 
     @Enumerated(value = EnumType.STRING)
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;
-
-    private Card cardInformation;
 
 }
