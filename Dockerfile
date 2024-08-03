@@ -20,6 +20,6 @@ WORKDIR /payment
 
 COPY --from=build /payment/target/*.jar ./payment-service.jar
 
-EXPOSE 7074
+EXPOSE 7075
 
 ENTRYPOINT ["java","-jar","payment-service.jar"]
