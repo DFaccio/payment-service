@@ -2,6 +2,7 @@ package com.payment_service.frameworks.external.card;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.payment_service.interfaceadapters.presenters.dto.CardTransactionRequestDto;
 import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
 import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
@@ -66,12 +67,12 @@ public class CardServiceInterfaceImpl implements CardServiceInterface{
     }
 
     @Override
-    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws IOException {
+    public ResponseEntity<?> newPayment(CardTransactionRequestDto cardTransactionRequestDto) throws IOException {
 
         return webClientBuilder.build()
                 .post()
                 .uri(cardAddress + CARD_BASE_URL_PRODUCTS + CARD_BASE_URI_TRANSACTIONS)
-                .body(BodyInserters.fromValue(mapper.writeValueAsString(requestPaymentDto)))
+                .body(BodyInserters.fromValue(mapper.writeValueAsString(cardTransactionRequestDto)))
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, clientResponse -> clientResponse
                         .bodyToMono(String.class)

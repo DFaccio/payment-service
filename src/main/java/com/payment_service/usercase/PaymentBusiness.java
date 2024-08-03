@@ -3,14 +3,10 @@ package com.payment_service.usercase;
 import com.payment_service.entities.Payment;
 import com.payment_service.frameworks.helper.PaymentHelper;
 import com.payment_service.interfaceadapters.presenters.converters.PaymentConverter;
-import com.payment_service.interfaceadapters.presenters.dto.CheckPaymentsDto;
-import com.payment_service.interfaceadapters.presenters.dto.PaymentDto;
-import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
+import com.payment_service.interfaceadapters.presenters.dto.*;
 import com.payment_service.util.enums.CardResponse;
 import com.payment_service.util.enums.PaymentStatus;
-import com.payment_service.util.exception.ExceptionHandlerUtil;
-import com.payment_service.util.exception.StandardError;
-import com.payment_service.util.exception.ValidationsException;
+import com.payment_service.util.exception.*;
 import com.payment_service.util.time.TimeUtils;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
@@ -72,21 +68,23 @@ public class PaymentBusiness {
             return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
         }
 
-        ResponseEntity<?> validateCard = paymentHelper.validateCard(requestPaymentDto);
+        ResponseEntity<?> cardValidationRequest = paymentHelper.validateCard(requestPaymentDto);
 
-        if(validateCard.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)){
+        if(cardValidationRequest.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)){
 
-            StandardError body = (StandardError) validateCard.getBody();
+            StandardError body = (StandardError) cardValidationRequest.getBody();
             message = body.getMessage();
 
             return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
         }
 
-        ResponseEntity<?> newPayment = paymentHelper.newPayment(requestPaymentDto);
+        CardTransactionRequestDto cardTransactionRequestDto = newCardTransactionRequestDto(requestPaymentDto);
 
-        if(newPayment.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)){
+        ResponseEntity<?> newPaymentRequest = paymentHelper.newPayment(cardTransactionRequestDto);
 
-            StandardError body = (StandardError) newPayment.getBody();
+        if(newPaymentRequest.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)){
+
+            StandardError body = (StandardError) newPaymentRequest.getBody();
             message = body.getMessage();
 
             if(StringUtils.equals(message, CardResponse.UNREPORTED_DATA_ERROR.toString())) {
@@ -94,21 +92,14 @@ public class PaymentBusiness {
             }else if(StringUtils.equals(message, CardResponse.CARD_NOT_FOUND.toString())){
                 return new ExceptionHandlerUtil().cardValidationError(new ValidationsException("0202"));
             }else if(StringUtils.equals(message, CardResponse.INSUFFICIENT_CARD_LIMIT.toString())){
-                return new ExceptionHandlerUtil().cardLimitError(new ValidationsException("0203"));
+                return new ExceptionHandlerUtil().cardLimitError(new CardLimitException("0203"));
             }
 
         }
 
-        PaymentDto paymentDto = new PaymentDto();
+        CardTransactionResponseDto cardTransactionResponseDto = (CardTransactionResponseDto) Objects.requireNonNull(newPaymentRequest.getBody());
 
-        paymentDto.setCpf(requestPaymentDto.getCpf());
-        paymentDto.setCardNumber(requestPaymentDto.getCardNumber());
-        paymentDto.setPaymentMethod(requestPaymentDto.getPaymentMethod());
-        paymentDto.setPaymentDescription(requestPaymentDto.getPaymentDescription());
-        paymentDto.setPaymentValue(requestPaymentDto.getValue());
-        paymentDto.setTransactionDate(TimeUtils.now());
-        paymentDto.setCardTransactionId(Objects.requireNonNull(newPayment.getBody()).toString());
-        paymentDto.setPaymentStatus(PaymentStatus.CONFIRMED);
+        PaymentDto paymentDto = newPaymentDto(requestPaymentDto, cardTransactionResponseDto);
 
         return ResponseEntity.ok(paymentDto);
 
@@ -138,11 +129,39 @@ public class PaymentBusiness {
             checkPaymentsDto.setPaymentStatus(payment.getPaymentStatus());
 
         }else{
-            return new ExceptionHandlerUtil().PaymentsNotFound(new ValidationsException("0301"));
+            return new ExceptionHandlerUtil().paymentsNotFound(new NotFoundException("0301"));
         }
 
         return ResponseEntity.ok(checkPaymentsDto);
 
+    }
+
+    private CardTransactionRequestDto newCardTransactionRequestDto(RequestPaymentDto requestPaymentDto) {
+        CardTransactionRequestDto cardTransactionRequestDto = new CardTransactionRequestDto();
+
+        cardTransactionRequestDto.setCpf(requestPaymentDto.getCpf());
+        cardTransactionRequestDto.setCardNumber(requestPaymentDto.getCardNumber());
+        cardTransactionRequestDto.setExpirationDate(requestPaymentDto.getExpirationDate());
+        cardTransactionRequestDto.setCvv(requestPaymentDto.getCvv());
+        cardTransactionRequestDto.setValue(requestPaymentDto.getValue());
+
+        return cardTransactionRequestDto;
+    }
+
+    private PaymentDto newPaymentDto(RequestPaymentDto requestPaymentDto, CardTransactionResponseDto cardTransactionResponseDto){
+
+        PaymentDto paymentDto = new PaymentDto();
+
+        paymentDto.setCpf(requestPaymentDto.getCpf());
+        paymentDto.setCardNumber(requestPaymentDto.getCardNumber());
+        paymentDto.setPaymentMethod(requestPaymentDto.getPaymentMethod());
+        paymentDto.setPaymentDescription(requestPaymentDto.getPaymentDescription());
+        paymentDto.setPaymentValue(requestPaymentDto.getValue());
+        paymentDto.setTransactionDate(TimeUtils.now());
+        paymentDto.setCardTransactionId(cardTransactionResponseDto.getPaymentId());
+        paymentDto.setPaymentStatus(PaymentStatus.CONFIRMED);
+
+        return paymentDto;
     }
 
 }

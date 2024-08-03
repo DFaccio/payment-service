@@ -19,8 +19,8 @@ public class ExceptionHandlerUtil extends Throwable {
         return ResponseEntity.status(status).body(error);
     }
 
-    @ExceptionHandler(ValidationsException.class)
-    public ResponseEntity<StandardError> cardLimitError(ValidationsException e) {
+    @ExceptionHandler(CardLimitException.class)
+    public ResponseEntity<StandardError> cardLimitError(CardLimitException e) {
         HttpStatus status = HttpStatus.PAYMENT_REQUIRED;
 
         StandardError error = new StandardError(status.value(),
@@ -30,8 +30,8 @@ public class ExceptionHandlerUtil extends Throwable {
         return ResponseEntity.status(status).body(error);
     }
 
-    @ExceptionHandler(ValidationsException.class)
-    public ResponseEntity<StandardError> PaymentsNotFound(ValidationsException e) {
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<StandardError> paymentsNotFound(NotFoundException e) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
         StandardError error = new StandardError(status.value(),

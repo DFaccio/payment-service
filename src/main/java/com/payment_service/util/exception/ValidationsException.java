@@ -8,7 +8,4 @@ public class ValidationsException extends Exception {
         super(MessageUtil.getMessage(code));
     }
 
-    public ValidationsException(String code, String... args) {
-        super(MessageUtil.getMessage(code, args));
-    }
 }

@@ -30,11 +30,11 @@ public class PaymentGateway {
     }
 
     public Page<Payment> findByStatus(Pageable pageable, PaymentStatus status){
-        return paymentRepository.findByStatus(pageable, status);
+        return paymentRepository.findByPaymentStatus(pageable, status);
     }
 
     public Page<Payment> findAllByCpfAndStatus(Pageable pageable, String cpf, PaymentStatus paymentStatus){
-        return paymentRepository.findAllByCpfAndStatus(pageable, cpf, paymentStatus);
+        return paymentRepository.findAllByCpfAndPaymentStatus(pageable, cpf, paymentStatus);
     };
 
     public Page<Payment> findAllByCpf(Pageable pageable, String cpf){

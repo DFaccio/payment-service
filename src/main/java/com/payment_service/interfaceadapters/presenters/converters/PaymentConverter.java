@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentConverter {
 
-    @Resource
-    private CardConverter cardConverter;
-
     public PaymentDto convert(Payment entity){
 
         PaymentDto dto = new PaymentDto();

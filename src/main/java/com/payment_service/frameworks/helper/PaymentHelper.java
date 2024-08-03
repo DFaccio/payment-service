@@ -1,6 +1,7 @@
 package com.payment_service.frameworks.helper;
 
 import com.payment_service.frameworks.external.card.CardServiceInterface;
+import com.payment_service.interfaceadapters.presenters.dto.CardTransactionRequestDto;
 import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
 import jakarta.annotation.Resource;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +21,9 @@ public class PaymentHelper {
 
     }
 
-    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws IOException {
+    public ResponseEntity<?> newPayment(CardTransactionRequestDto cardTransactionRequestDto) throws IOException {
 
-        return cardServiceInterface.newPayment(requestPaymentDto);
+        return cardServiceInterface.newPayment(cardTransactionRequestDto);
 
     }
 

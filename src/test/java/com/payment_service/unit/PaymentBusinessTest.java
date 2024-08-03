@@ -5,6 +5,7 @@ import com.payment_service.entities.Payment;
 import com.payment_service.frameworks.db.PaymentRepository;
 import com.payment_service.interfaceadapters.gateways.PaymentGateway;
 import com.payment_service.interfaceadapters.presenters.converters.PaymentConverter;
+import com.payment_service.interfaceadapters.presenters.dto.CheckPaymentsDto;
 import com.payment_service.usercase.PaymentBusiness;
 import com.payment_service.util.enums.PaymentStatus;
 import com.payment_service.util.time.TimeUtils;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+
+import static org.junit.Assert.assertEquals;
 
 class PaymentBusinessTest extends TestUtils {
 
@@ -59,10 +62,12 @@ class PaymentBusinessTest extends TestUtils {
     @Test
     void checkCustomerPaymentsTest(){
 
+        CheckPaymentsDto checkPaymentsDto = checkPaymentsDto();
+
         Optional<Payment> optional = paymentGateway.checkCustomerPayments("43556112566");
         ResponseEntity<?> response = paymentBusiness.checkCustomerPayments(optional);
 
-
+        assertEquals(checkPaymentsDto, response.getBody());
 
     }
 
@@ -80,6 +85,19 @@ class PaymentBusinessTest extends TestUtils {
         entity.setPaymentStatus(PaymentStatus.CONFIRMED);
 
         return entity;
+
+    }
+
+    private CheckPaymentsDto checkPaymentsDto(){
+
+        CheckPaymentsDto checkPaymentsDto = new CheckPaymentsDto();
+
+        checkPaymentsDto.setPaymentValue(BigDecimal.valueOf(150.00));
+        checkPaymentsDto.setPaymentMethod("Cartão de crédito");
+        checkPaymentsDto.setPaymentDescription("Compra de um livro");
+        checkPaymentsDto.setPaymentStatus(PaymentStatus.CONFIRMED);
+
+        return checkPaymentsDto;
 
     }
 
