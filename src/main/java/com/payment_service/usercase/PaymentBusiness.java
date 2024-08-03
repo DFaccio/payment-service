@@ -9,9 +9,11 @@ import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
 import com.payment_service.util.enums.CardResponse;
 import com.payment_service.util.enums.PaymentStatus;
 import com.payment_service.util.exception.ExceptionHandlerUtil;
+import com.payment_service.util.exception.StandardError;
 import com.payment_service.util.exception.ValidationsException;
 import com.payment_service.util.time.TimeUtils;
 import jakarta.annotation.Resource;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -33,43 +35,69 @@ public class PaymentBusiness {
 
     public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws IOException {
 
-        String error = "";
+        String message = "";
 
         if(requestPaymentDto.getValue().compareTo(BigDecimal.ZERO) <= 0){
+            message = "0101";
+            return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
+        }
 
-            error = "0001";
+        if(requestPaymentDto.getCvv().isEmpty() || Objects.isNull(requestPaymentDto.getCvv())){
+            message = "0102";
+            return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
+        }
 
-            return new ExceptionHandlerUtil().validationsError(new ValidationsException(error));
+        if(requestPaymentDto.getExpirationDate().isEmpty() || Objects.isNull(requestPaymentDto.getExpirationDate())){
+            message = "0103";
+            return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
+        }
 
+        if(requestPaymentDto.getCpf().isEmpty() || Objects.isNull(requestPaymentDto.getCpf())){
+            message = "0104";
+            return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
+        }
+
+        if(requestPaymentDto.getCardNumber().isEmpty() || Objects.isNull(requestPaymentDto.getCardNumber())){
+            message = "0105";
+            return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
+        }
+
+        if(requestPaymentDto.getPaymentDescription().isEmpty() || Objects.isNull(requestPaymentDto.getPaymentDescription())){
+            message = "0106";
+            return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
+        }
+
+        if(requestPaymentDto.getPaymentMethod().isEmpty() || Objects.isNull(requestPaymentDto.getPaymentMethod())){
+            message = "0107";
+            return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
         }
 
         ResponseEntity<?> validateCard = paymentHelper.validateCard(requestPaymentDto);
 
-        if(validateCard.getStatusCode().equals(HttpStatus.PAYMENT_REQUIRED)){
+        if(validateCard.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)){
 
-            error = "0101";
+            StandardError body = (StandardError) validateCard.getBody();
+            message = body.getMessage();
 
-            return new ExceptionHandlerUtil().cardLimitError(new ValidationsException(error));
-
-        }else if(validateCard.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)){
-
-            if(Objects.equals(validateCard.getBody(), CardResponse.INVALID_CVV.toString())){
-                error = "0102";
-            }else if(Objects.equals(validateCard.getBody(), CardResponse.INVALID_EXPIRATION_DATE.toString())){
-                error = "0103";
-            }else if(Objects.equals(validateCard.getBody(), CardResponse.CARD_EXPIRED.toString())){
-                error = "0104";
-            }else if(Objects.equals(validateCard.getBody(), CardResponse.INVALID_CARD_NUMBER.toString())){
-                error = "0105";
-            }else if(Objects.equals(validateCard.getBody(), CardResponse.INVALID_CPF.toString())){
-                error = "0106";
-            }
-
-            return new ExceptionHandlerUtil().validationsError(new ValidationsException(error));
-
+            return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
         }
 
         ResponseEntity<?> newPayment = paymentHelper.newPayment(requestPaymentDto);
+
+        if(newPayment.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)){
+
+            StandardError body = (StandardError) newPayment.getBody();
+            message = body.getMessage();
+
+            if(StringUtils.equals(message, CardResponse.UNREPORTED_DATA_ERROR.toString())) {
+                return new ExceptionHandlerUtil().cardValidationError(new ValidationsException("0201"));
+            }else if(StringUtils.equals(message, CardResponse.CARD_NOT_FOUND.toString())){
+                return new ExceptionHandlerUtil().cardValidationError(new ValidationsException("0202"));
+            }else if(StringUtils.equals(message, CardResponse.INSUFFICIENT_CARD_LIMIT.toString())){
+                return new ExceptionHandlerUtil().cardLimitError(new ValidationsException("0203"));
+            }
+
+        }
 
         PaymentDto paymentDto = new PaymentDto();
 
@@ -79,7 +107,7 @@ public class PaymentBusiness {
         paymentDto.setPaymentDescription(requestPaymentDto.getPaymentDescription());
         paymentDto.setPaymentValue(requestPaymentDto.getValue());
         paymentDto.setTransactionDate(TimeUtils.now());
-        paymentDto.setCardTransactionId(newPayment.getBody().toString());
+        paymentDto.setCardTransactionId(Objects.requireNonNull(newPayment.getBody()).toString());
         paymentDto.setPaymentStatus(PaymentStatus.CONFIRMED);
 
         return ResponseEntity.ok(paymentDto);
@@ -96,7 +124,7 @@ public class PaymentBusiness {
 
     }
 
-    public ResponseEntity<?> checkPayments(Optional<Payment> optionalPayment){
+    public ResponseEntity<?> checkCustomerPayments(Optional<Payment> optionalPayment){
 
         CheckPaymentsDto checkPaymentsDto = new CheckPaymentsDto();
 
@@ -110,9 +138,7 @@ public class PaymentBusiness {
             checkPaymentsDto.setPaymentStatus(payment.getPaymentStatus());
 
         }else{
-
-            return ResponseEntity.noContent().build();
-
+            return new ExceptionHandlerUtil().PaymentsNotFound(new ValidationsException("0301"));
         }
 
         return ResponseEntity.ok(checkPaymentsDto);

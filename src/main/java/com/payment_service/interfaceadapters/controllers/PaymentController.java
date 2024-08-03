@@ -3,12 +3,11 @@ package com.payment_service.interfaceadapters.controllers;
 import com.payment_service.entities.Payment;
 import com.payment_service.interfaceadapters.gateways.PaymentGateway;
 import com.payment_service.interfaceadapters.presenters.converters.PaymentConverter;
-import com.payment_service.interfaceadapters.presenters.dto.CheckPaymentsDto;
 import com.payment_service.interfaceadapters.presenters.dto.PaymentDto;
 import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
 import com.payment_service.usercase.PaymentBusiness;
 import jakarta.annotation.Resource;
-import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -32,24 +31,28 @@ public class PaymentController {
 
         ResponseEntity<?> responseEntity = paymentBusiness.newPayment(requestPaymentDto);
 
-        Payment payment = paymentConverter.convert((PaymentDto) Objects.requireNonNull(responseEntity.getBody()));
+        if(responseEntity.getStatusCode().equals(HttpStatus.OK)){
 
-        payment = paymentGateway.insert(payment);
+            Payment payment = paymentConverter.convert((PaymentDto) Objects.requireNonNull(responseEntity.getBody()));
 
-        responseEntity = paymentBusiness.toResponse(payment);
+            payment = paymentGateway.insert(payment);
+
+            responseEntity = paymentBusiness.toResponse(payment);
+
+        }
 
         return responseEntity;
 
     }
 
-    public ResponseEntity<?> checkPayments(String cpf) throws IOException{
+    public ResponseEntity<?> checkCustomerPayments(String cpf){
 
         ResponseEntity responseEntity;
         Optional<Payment> payment;
 
-        payment = paymentGateway.checkPayments(cpf);
+        payment = paymentGateway.checkCustomerPayments(cpf);
 
-        responseEntity = paymentBusiness.checkPayments(payment);
+        responseEntity = paymentBusiness.checkCustomerPayments(payment);
 
         return responseEntity;
 

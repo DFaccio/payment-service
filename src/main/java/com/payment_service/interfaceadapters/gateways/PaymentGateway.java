@@ -41,7 +41,7 @@ public class PaymentGateway {
         return paymentRepository.findAllByCpf(pageable, cpf);
     };
 
-    public Optional<Payment> checkPayments(String cpf){
+    public Optional<Payment> checkCustomerPayments(String cpf){
         return paymentRepository.findByCpf(cpf);
     };
 
