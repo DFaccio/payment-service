@@ -1,86 +1,52 @@
 package com.payment_service.frameworks.external.card;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.payment_service.interfaceadapters.presenters.dto.CardTransactionRequestDto;
-import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
+import com.payment_service.util.MessageUtil;
+import com.payment_service.util.exception.ExternalInterfaceException;
+import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Mono;
-
-import java.io.IOException;
 
 @Service
 @Transactional
 @Log4j2
-public class CardServiceInterfaceImpl implements CardServiceInterface{
-
-    private final WebClient.Builder webClientBuilder;
-
-    private final ObjectMapper mapper;
-
-    @Value("${card.address}")
-    private String cardAddress;
-
-    private static final String CARD_BASE_URL_PRODUCTS = "/api/cartao";
-
-    private static final String CARD_BASE_URI_TRANSACTIONS = "/transactions";
+public class CardServiceInterfaceImpl implements CardServiceInterface {
 
     @Autowired
-    public CardServiceInterfaceImpl(WebClient.Builder webClientBuilder, ObjectMapper mapper) {
-        this.webClientBuilder = webClientBuilder;
-        this.mapper = mapper;
-        this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    private final CardServiceInterface cardServiceInterface;
+
+    @Autowired
+    public CardServiceInterfaceImpl(CardServiceInterface cardServiceInterface) {
+        this.cardServiceInterface = cardServiceInterface;
     }
 
     @Override
-    public ResponseEntity<?> validateCard(RequestPaymentDto requestPaymentDto) throws IOException{
-
-        String uri = UriComponentsBuilder.fromHttpUrl(cardAddress + CARD_BASE_URL_PRODUCTS)
-                .queryParam("cpf", requestPaymentDto.getCpf())
-                .queryParam("numero", requestPaymentDto.getCardNumber())
-                .queryParam("data", requestPaymentDto.getExpirationDate())
-                .queryParam("cvv", requestPaymentDto.getCvv())
-                .toUriString();
-
-        return webClientBuilder.build()
-                .method(HttpMethod.GET)
-                .uri(uri)
-                .body(BodyInserters.fromValue(mapper.writeValueAsString(requestPaymentDto)))
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, clientResponse -> clientResponse
-                        .bodyToMono(String.class)
-                        .flatMap(errorBody -> Mono.error(new RuntimeException("Error: " + errorBody))
-                        )
-                )
-                .bodyToMono(ResponseEntity.class).block();
-
+    public ResponseEntity<?> validateCard(String cpf, String cardNumber, String expirationDate, String cvv) throws ExternalInterfaceException {
+        try {
+            return cardServiceInterface.validateCard(cpf, cardNumber, expirationDate, cvv);
+        } catch (FeignException exception) {
+            if (HttpStatusCode.valueOf(exception.status()) == HttpStatus.INTERNAL_SERVER_ERROR) {
+                return new ResponseEntity<>(exception.responseBody(), HttpStatusCode.valueOf(exception.status()));
+            }
+            throw new ExternalInterfaceException(MessageUtil.getMessage("0401"));
+        }
     }
 
     @Override
-    public ResponseEntity<?> newPayment(CardTransactionRequestDto cardTransactionRequestDto) throws IOException {
-
-        return webClientBuilder.build()
-                .post()
-                .uri(cardAddress + CARD_BASE_URL_PRODUCTS + CARD_BASE_URI_TRANSACTIONS)
-                .body(BodyInserters.fromValue(mapper.writeValueAsString(cardTransactionRequestDto)))
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, clientResponse -> clientResponse
-                        .bodyToMono(String.class)
-                        .flatMap(errorBody -> Mono.error(new RuntimeException("Error: " + errorBody))
-                        )
-                )
-                .bodyToMono(ResponseEntity.class).block();
-
+    public ResponseEntity<?> newPayment(CardTransactionRequestDto cardTransactionRequestDto) throws ExternalInterfaceException {
+        try {
+            return cardServiceInterface.newPayment(cardTransactionRequestDto);
+        } catch (FeignException exception) {
+            if (HttpStatusCode.valueOf(exception.status()) == HttpStatus.INTERNAL_SERVER_ERROR) {
+                return new ResponseEntity<>(exception.responseBody(), HttpStatusCode.valueOf(exception.status()));
+            }
+            throw new ExternalInterfaceException(MessageUtil.getMessage("0401"));
+        }
     }
 
 }

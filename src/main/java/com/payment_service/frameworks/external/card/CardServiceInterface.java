@@ -1,17 +1,27 @@
 package com.payment_service.frameworks.external.card;
 
 import com.payment_service.interfaceadapters.presenters.dto.CardTransactionRequestDto;
-import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
+import com.payment_service.util.config.FeignClientConfig;
+import com.payment_service.util.exception.CustomErrorDecoder;
+import com.payment_service.util.exception.ExternalInterfaceException;
+import jakarta.validation.Valid;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.IOException;
-
-@Service
+@FeignClient(name = "cartaoService", url = "${card.address}", configuration ={ FeignClientConfig.class, CustomErrorDecoder.class})
 public interface CardServiceInterface {
 
-    ResponseEntity<?> validateCard(RequestPaymentDto requestPaymentDto) throws IOException;
+    @GetMapping(value = "/api/cartao", headers = "Content-Type=application/json")
+    ResponseEntity<?> validateCard(@RequestParam String cpf,
+                                   @RequestParam String numero,
+                                   @RequestParam String data,
+                                   @RequestParam String cvv) throws ExternalInterfaceException;
 
-    ResponseEntity<?> newPayment(CardTransactionRequestDto cardTransactionRequestDto) throws IOException;
+    @PostMapping(value = "/api/cartao/transactions", headers = "Content-Type=application/json")
+    ResponseEntity<?> newPayment(@RequestBody @Valid CardTransactionRequestDto cardTransactionRequestDto ) throws ExternalInterfaceException;
 
 }

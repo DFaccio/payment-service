@@ -6,12 +6,12 @@ import com.payment_service.interfaceadapters.presenters.converters.PaymentConver
 import com.payment_service.interfaceadapters.presenters.dto.PaymentDto;
 import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
 import com.payment_service.usercase.PaymentBusiness;
+import com.payment_service.util.exception.ExternalInterfaceException;
 import jakarta.annotation.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,7 +27,7 @@ public class PaymentController {
     @Resource
     private PaymentConverter paymentConverter;
 
-    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws IOException{
+    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws ExternalInterfaceException {
 
         ResponseEntity<?> responseEntity = paymentBusiness.newPayment(requestPaymentDto);
 
