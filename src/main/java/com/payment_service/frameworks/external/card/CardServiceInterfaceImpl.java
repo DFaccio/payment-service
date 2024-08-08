@@ -1,6 +1,7 @@
 package com.payment_service.frameworks.external.card;
 
 import com.payment_service.interfaceadapters.presenters.dto.CardTransactionRequestDto;
+import com.payment_service.interfaceadapters.presenters.dto.CardTransactionResponseDto;
 import com.payment_service.util.MessageUtil;
 import com.payment_service.util.exception.ExternalInterfaceException;
 import feign.FeignException;
@@ -30,21 +31,15 @@ public class CardServiceInterfaceImpl implements CardServiceInterface {
         try {
             return cardServiceInterface.validateCard(cpf, cardNumber, expirationDate, cvv);
         } catch (FeignException exception) {
-            if (HttpStatusCode.valueOf(exception.status()) == HttpStatus.INTERNAL_SERVER_ERROR) {
-                return new ResponseEntity<>(exception.responseBody(), HttpStatusCode.valueOf(exception.status()));
-            }
             throw new ExternalInterfaceException(MessageUtil.getMessage("0401"));
         }
     }
 
     @Override
-    public ResponseEntity<?> newPayment(CardTransactionRequestDto cardTransactionRequestDto) throws ExternalInterfaceException {
+    public ResponseEntity<CardTransactionResponseDto> newPayment(CardTransactionRequestDto cardTransactionRequestDto) throws ExternalInterfaceException {
         try {
             return cardServiceInterface.newPayment(cardTransactionRequestDto);
         } catch (FeignException exception) {
-            if (HttpStatusCode.valueOf(exception.status()) == HttpStatus.INTERNAL_SERVER_ERROR) {
-                return new ResponseEntity<>(exception.responseBody(), HttpStatusCode.valueOf(exception.status()));
-            }
             throw new ExternalInterfaceException(MessageUtil.getMessage("0401"));
         }
     }

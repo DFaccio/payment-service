@@ -1,5 +1,6 @@
 package com.payment_service.interfaceadapters.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.payment_service.entities.Payment;
 import com.payment_service.interfaceadapters.gateways.PaymentGateway;
 import com.payment_service.interfaceadapters.presenters.converters.PaymentConverter;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,7 +30,7 @@ public class PaymentController {
     @Resource
     private PaymentConverter paymentConverter;
 
-    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws ExternalInterfaceException {
+    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws ExternalInterfaceException, IOException {
 
         ResponseEntity<?> responseEntity = paymentBusiness.newPayment(requestPaymentDto);
 
@@ -45,10 +48,10 @@ public class PaymentController {
 
     }
 
-    public ResponseEntity<?> checkCustomerPayments(String cpf){
+    public ResponseEntity<?> checkCustomerPayments(String cpf) throws JsonProcessingException {
 
         ResponseEntity responseEntity;
-        Optional<Payment> payment;
+        Optional<List<Payment>> payment;
 
         payment = paymentGateway.checkCustomerPayments(cpf);
 

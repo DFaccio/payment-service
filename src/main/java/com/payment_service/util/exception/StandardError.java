@@ -18,13 +18,19 @@ public class StandardError {
 
     private String message;
 
+    private String path;
 
-    public StandardError(int statusCode, String error, String message) {
+    public StandardError(int statusCode, String error, String message, String path) {
         this.statusCode = statusCode;
         this.error = error;
         this.message = message;
+        this.path = path;
         this.time = LocalDateTime.now()
                 .atZone(ZoneId.of("America/Sao_Paulo"))
                 .toLocalDateTime();
+    }
+
+    public StandardError() {
+
     }
 }

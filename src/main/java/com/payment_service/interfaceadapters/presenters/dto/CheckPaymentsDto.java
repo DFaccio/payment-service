@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,7 +15,9 @@ import java.math.BigDecimal;
 @Setter
 public class CheckPaymentsDto {
 
-    private BigDecimal paymentValue;
+    private UUID paymentId;
+
+    private double paymentValue;
 
     private String paymentDescription;
 

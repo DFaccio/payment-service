@@ -20,7 +20,8 @@ import java.util.UUID;
 public class Payment {
 
     @Id
-    @Column
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(updatable = false, nullable = false)
     private UUID paymentId;
 
     @Column(name = "cpf")
@@ -35,8 +36,8 @@ public class Payment {
     @Column(name = "paymentdescription")
     private String paymentDescription;
 
-    @Column(name = "paymentvalue", precision = 15, scale = 4)
-    private BigDecimal paymentValue;
+    @Column(name = "paymentvalue")
+    private double paymentValue;
 
     @Column(name = "transactiondate")
     @Temporal(TemporalType.TIMESTAMP)
@@ -48,5 +49,12 @@ public class Payment {
     @Enumerated(value = EnumType.STRING)
     @Column(name = "paymentstatus")
     private PaymentStatus paymentStatus;
+
+    @PrePersist
+    public void generateUUID() {
+        if (this.paymentId == null) {
+            this.paymentId = UUID.randomUUID();
+        }
+    }
 
 }

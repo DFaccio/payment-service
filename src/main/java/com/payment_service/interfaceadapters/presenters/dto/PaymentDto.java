@@ -28,7 +28,7 @@ public class PaymentDto {
 
     private String paymentDescription;
 
-    private BigDecimal paymentValue;
+    private double paymentValue;
 
     private LocalDateTime transactionDate;
 

@@ -1,20 +1,23 @@
 package com.payment_service.usercase;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.payment_service.entities.Payment;
 import com.payment_service.frameworks.helper.PaymentHelper;
 import com.payment_service.interfaceadapters.presenters.converters.PaymentConverter;
 import com.payment_service.interfaceadapters.presenters.dto.*;
-import com.payment_service.util.enums.CardResponse;
 import com.payment_service.util.enums.PaymentStatus;
-import com.payment_service.util.exception.*;
+import com.payment_service.util.exception.ExceptionHandlerUtil;
+import com.payment_service.util.exception.ExternalInterfaceException;
+import com.payment_service.util.exception.NotFoundException;
+import com.payment_service.util.exception.ValidationsException;
 import com.payment_service.util.time.TimeUtils;
 import jakarta.annotation.Resource;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -28,11 +31,11 @@ public class PaymentBusiness {
     private PaymentConverter paymentConverter;
 
 
-    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws ExternalInterfaceException {
+    public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws ExternalInterfaceException, IOException {
 
         String message = "";
 
-        if(requestPaymentDto.getValue().compareTo(BigDecimal.ZERO) <= 0){
+        if(requestPaymentDto.getValue() <= 0){
             message = "0101";
             return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
         }
@@ -67,36 +70,11 @@ public class PaymentBusiness {
             return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
         }
 
-        ResponseEntity<?> cardValidationRequest = paymentHelper.validateCard(requestPaymentDto);
-
-        if(cardValidationRequest.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)){
-
-            StandardError body = (StandardError) cardValidationRequest.getBody();
-            message = body.getMessage();
-
-            return new ExceptionHandlerUtil().cardValidationError(new ValidationsException(message));
-        }
+        paymentHelper.validateCard(requestPaymentDto);
 
         CardTransactionRequestDto cardTransactionRequestDto = newCardTransactionRequestDto(requestPaymentDto);
 
-        ResponseEntity<?> newPaymentRequest = paymentHelper.newPayment(cardTransactionRequestDto);
-
-        if(newPaymentRequest.getStatusCode().equals(HttpStatus.INTERNAL_SERVER_ERROR)){
-
-            StandardError body = (StandardError) newPaymentRequest.getBody();
-            message = body.getMessage();
-
-            if(StringUtils.equals(message, CardResponse.UNREPORTED_DATA_ERROR.toString())) {
-                return new ExceptionHandlerUtil().cardValidationError(new ValidationsException("0201"));
-            }else if(StringUtils.equals(message, CardResponse.CARD_NOT_FOUND.toString())){
-                return new ExceptionHandlerUtil().cardValidationError(new ValidationsException("0202"));
-            }else if(StringUtils.equals(message, CardResponse.INSUFFICIENT_CARD_LIMIT.toString())){
-                return new ExceptionHandlerUtil().cardLimitError(new CardLimitException("0203"));
-            }
-
-        }
-
-        CardTransactionResponseDto cardTransactionResponseDto = (CardTransactionResponseDto) Objects.requireNonNull(newPaymentRequest.getBody());
+        CardTransactionResponseDto cardTransactionResponseDto = (CardTransactionResponseDto) paymentHelper.newPayment(cardTransactionRequestDto).getBody();
 
         PaymentDto paymentDto = newPaymentDto(requestPaymentDto, cardTransactionResponseDto);
 
@@ -114,18 +92,26 @@ public class PaymentBusiness {
 
     }
 
-    public ResponseEntity<?> checkCustomerPayments(Optional<Payment> optionalPayment){
+    public ResponseEntity<?> checkCustomerPayments(Optional<List<Payment>> optionalPayment) throws JsonProcessingException {
 
-        CheckPaymentsDto checkPaymentsDto = new CheckPaymentsDto();
+        List<CheckPaymentsDto> checkPaymentsDto = new ArrayList<>();
 
         if(optionalPayment.isPresent()){
 
-            Payment payment = optionalPayment.get();
+            List<Payment> payments = optionalPayment.get();
 
-            checkPaymentsDto.setPaymentValue(payment.getPaymentValue());
-            checkPaymentsDto.setPaymentDescription(payment.getPaymentDescription());
-            checkPaymentsDto.setPaymentMethod(payment.getPaymentMethod());
-            checkPaymentsDto.setPaymentStatus(payment.getPaymentStatus());
+            for(Payment payment : payments){
+                CheckPaymentsDto dto = new CheckPaymentsDto();
+
+                dto.setPaymentId(payment.getPaymentId());
+                dto.setPaymentValue(payment.getPaymentValue());
+                dto.setPaymentDescription(payment.getPaymentDescription());
+                dto.setPaymentMethod(payment.getPaymentMethod());
+                dto.setPaymentStatus(payment.getPaymentStatus());
+
+                checkPaymentsDto.add(dto);
+            }
+
 
         }else{
             return new ExceptionHandlerUtil().paymentsNotFound(new NotFoundException("0301"));
@@ -158,7 +144,7 @@ public class PaymentBusiness {
         paymentDto.setPaymentValue(requestPaymentDto.getValue());
         paymentDto.setTransactionDate(TimeUtils.now());
         paymentDto.setCardTransactionId(cardTransactionResponseDto.getPaymentId());
-        paymentDto.setPaymentStatus(PaymentStatus.CONFIRMED);
+        paymentDto.setPaymentStatus(PaymentStatus.APPROVED);
 
         return paymentDto;
     }

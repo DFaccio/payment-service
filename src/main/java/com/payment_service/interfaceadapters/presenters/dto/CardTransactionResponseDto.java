@@ -1,6 +1,7 @@
 package com.payment_service.interfaceadapters.presenters.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,15 +11,15 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-@JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class CardTransactionResponseDto {
 
-    private String id;
-
+    @JsonProperty("id")
     private String paymentId;
 
+    @JsonProperty("value")
     private double value;
 
+    @JsonProperty("created")
     private String created;
 
 }

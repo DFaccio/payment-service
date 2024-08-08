@@ -1,6 +1,7 @@
 package com.payment_service.frameworks.external.card;
 
 import com.payment_service.interfaceadapters.presenters.dto.CardTransactionRequestDto;
+import com.payment_service.interfaceadapters.presenters.dto.CardTransactionResponseDto;
 import com.payment_service.util.config.FeignClientConfig;
 import com.payment_service.util.exception.CustomErrorDecoder;
 import com.payment_service.util.exception.ExternalInterfaceException;
@@ -22,6 +23,6 @@ public interface CardServiceInterface {
                                    @RequestParam String cvv) throws ExternalInterfaceException;
 
     @PostMapping(value = "/api/cartao/transactions", headers = "Content-Type=application/json")
-    ResponseEntity<?> newPayment(@RequestBody @Valid CardTransactionRequestDto cardTransactionRequestDto ) throws ExternalInterfaceException;
+    ResponseEntity<CardTransactionResponseDto> newPayment(@RequestBody @Valid CardTransactionRequestDto cardTransactionRequestDto ) throws ExternalInterfaceException;
 
 }
