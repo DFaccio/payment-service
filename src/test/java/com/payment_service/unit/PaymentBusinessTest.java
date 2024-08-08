@@ -1,16 +1,13 @@
 package com.payment_service.unit;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.util.*;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.payment_service.entities.Payment;
 import com.payment_service.frameworks.helper.PaymentHelper;
 import com.payment_service.interfaceadapters.gateways.PaymentGateway;
-import com.payment_service.interfaceadapters.presenters.dto.*;
+import com.payment_service.interfaceadapters.presenters.dto.CardTransactionRequestDto;
+import com.payment_service.interfaceadapters.presenters.dto.CardTransactionResponseDto;
+import com.payment_service.interfaceadapters.presenters.dto.CheckPaymentsDto;
+import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
 import com.payment_service.usercase.PaymentBusiness;
 import com.payment_service.util.MessageUtil;
 import com.payment_service.util.enums.PaymentStatus;
@@ -20,15 +17,19 @@ import com.payment_service.util.exception.StandardError;
 import com.payment_service.util.time.TimeUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.io.IOException;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 class PaymentBusinessTest{
 
@@ -195,8 +196,11 @@ class PaymentBusinessTest{
     @Test
     public void testNewPaymentWithValidRequest() throws ExternalInterfaceException, IOException {
 
-        when(paymentHelper.validateCard(requestPaymentDto)).thenReturn(ResponseEntity.status(HttpStatus.OK).build());
-        when(paymentHelper.newPayment(cardTransactionRequestDto)).thenReturn(ResponseEntity.status(HttpStatus.OK).body(cardTransactionResponseDto));
+        when(paymentHelper.validateCard(any(RequestPaymentDto.class))).thenReturn(ResponseEntity.status(HttpStatus.OK).build());
+
+        // Casting do tipo ResponseEntity<?> para ResponseEntity<CardTransactionResponseDto>
+        when(paymentHelper.newPayment(any(CardTransactionRequestDto.class)))
+                .thenReturn((ResponseEntity) ResponseEntity.status(HttpStatus.OK).body(cardTransactionResponseDto));
 
         ResponseEntity<?> response = paymentBusiness.newPayment(requestPaymentDto);
 
