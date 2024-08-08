@@ -14,10 +14,6 @@ public class CustomErrorDecoder implements ErrorDecoder {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-//        if (status != HttpStatus.INTERNAL_SERVER_ERROR) {
-//            return new RuntimeException(response.reason());
-//        }
-
         return new ResponseStatusException(status, response.reason());
     }
 }

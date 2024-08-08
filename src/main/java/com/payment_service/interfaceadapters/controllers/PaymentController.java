@@ -2,7 +2,7 @@ package com.payment_service.interfaceadapters.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.payment_service.entities.Payment;
-import com.payment_service.interfaceadapters.gateways.PaymentGateway;
+import com.payment_service.interfaceadapters.gateway.PaymentGateway;
 import com.payment_service.interfaceadapters.presenters.converters.PaymentConverter;
 import com.payment_service.interfaceadapters.presenters.dto.PaymentDto;
 import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;

@@ -30,6 +30,10 @@ public class PaymentBusiness {
     @Resource
     private PaymentConverter paymentConverter;
 
+    public PaymentBusiness(PaymentHelper paymentHelper, PaymentConverter paymentConverter) {
+        this.paymentHelper = paymentHelper;
+        this.paymentConverter = paymentConverter;
+    }
 
     public ResponseEntity<?> newPayment(RequestPaymentDto requestPaymentDto) throws ExternalInterfaceException, IOException {
 
@@ -121,7 +125,7 @@ public class PaymentBusiness {
 
     }
 
-    private CardTransactionRequestDto newCardTransactionRequestDto(RequestPaymentDto requestPaymentDto) {
+    public CardTransactionRequestDto newCardTransactionRequestDto(RequestPaymentDto requestPaymentDto) {
         CardTransactionRequestDto cardTransactionRequestDto = new CardTransactionRequestDto();
 
         cardTransactionRequestDto.setCpf(requestPaymentDto.getCpf());
@@ -133,7 +137,7 @@ public class PaymentBusiness {
         return cardTransactionRequestDto;
     }
 
-    private PaymentDto newPaymentDto(RequestPaymentDto requestPaymentDto, CardTransactionResponseDto cardTransactionResponseDto){
+    public PaymentDto newPaymentDto(RequestPaymentDto requestPaymentDto, CardTransactionResponseDto cardTransactionResponseDto){
 
         PaymentDto paymentDto = new PaymentDto();
 

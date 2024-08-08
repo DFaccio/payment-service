@@ -13,16 +13,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "cartaoService", url = "${card.address}", configuration ={ FeignClientConfig.class, CustomErrorDecoder.class})
+@FeignClient(name = "cartaoService", url = "${card.feign}", configuration ={ FeignClientConfig.class, CustomErrorDecoder.class})
 public interface CardServiceInterface {
 
-    @GetMapping(value = "/api/cartao", headers = "Content-Type=application/json")
+    @GetMapping(value = "/cartao", headers = "Content-Type=application/json")
     ResponseEntity<?> validateCard(@RequestParam String cpf,
                                    @RequestParam String numero,
                                    @RequestParam String data,
                                    @RequestParam String cvv) throws ExternalInterfaceException;
 
-    @PostMapping(value = "/api/cartao/transactions", headers = "Content-Type=application/json")
+    @PostMapping(value = "/cartao/transactions", headers = "Content-Type=application/json")
     ResponseEntity<CardTransactionResponseDto> newPayment(@RequestBody @Valid CardTransactionRequestDto cardTransactionRequestDto ) throws ExternalInterfaceException;
 
 }

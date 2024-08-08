@@ -1,14 +1,11 @@
-package com.payment_service.unit;
+package com.payment_service.usercase;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.payment_service.entities.Payment;
 import com.payment_service.frameworks.helper.PaymentHelper;
-import com.payment_service.interfaceadapters.gateways.PaymentGateway;
-import com.payment_service.interfaceadapters.presenters.dto.CardTransactionRequestDto;
-import com.payment_service.interfaceadapters.presenters.dto.CardTransactionResponseDto;
-import com.payment_service.interfaceadapters.presenters.dto.CheckPaymentsDto;
-import com.payment_service.interfaceadapters.presenters.dto.RequestPaymentDto;
-import com.payment_service.usercase.PaymentBusiness;
+import com.payment_service.interfaceadapters.gateway.PaymentGateway;
+import com.payment_service.interfaceadapters.presenters.converters.PaymentConverter;
+import com.payment_service.interfaceadapters.presenters.dto.*;
 import com.payment_service.util.MessageUtil;
 import com.payment_service.util.enums.PaymentStatus;
 import com.payment_service.util.exception.ExceptionHandlerUtil;
@@ -24,11 +21,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearAllCaches;
 import static org.mockito.Mockito.when;
 
 class PaymentBusinessTest{
@@ -45,7 +44,15 @@ class PaymentBusinessTest{
     @Mock
     private PaymentHelper paymentHelper;
 
+    @Mock
+    private PaymentConverter paymentConverter;
+
+    @Mock
+    private TimeUtils timeUtils;
+
     private Payment payment;
+
+    private PaymentDto paymentDto;
 
     private List<Payment> paymentList;
 
@@ -55,10 +62,14 @@ class PaymentBusinessTest{
 
     private CardTransactionResponseDto cardTransactionResponseDto;
 
+    private LocalDateTime now;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        now = TimeUtils.now();
         payment = newPayment();
+        paymentDto = newPaymentDto();
         paymentList = new ArrayList<>();
         paymentList.add(payment);
         requestPaymentDto = newRequestPaymentDto();
@@ -66,23 +77,6 @@ class PaymentBusinessTest{
         cardTransactionResponseDto = newCardTransactionResponseDto();
 
     }
-
-    @Test
-    void newPaymentTest(){
-
-
-
-    }
-
-//    @Test
-//    public void testNewPaymentWithInvalidValue() throws ExternalInterfaceException, IOException {
-//        validRequest.setValue(0);
-//
-//        ResponseEntity<?> response = paymentService.newPayment(validRequest);
-//
-//        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-//        assertEquals("0101", ((ValidationsException) Objects.requireNonNull(response.getBody())).getMessage());
-//    }
 
     @Test
     void checkCustomerPaymentsTest() throws JsonProcessingException {
@@ -198,7 +192,6 @@ class PaymentBusinessTest{
 
         when(paymentHelper.validateCard(any(RequestPaymentDto.class))).thenReturn(ResponseEntity.status(HttpStatus.OK).build());
 
-        // Casting do tipo ResponseEntity<?> para ResponseEntity<CardTransactionResponseDto>
         when(paymentHelper.newPayment(any(CardTransactionRequestDto.class)))
                 .thenReturn((ResponseEntity) ResponseEntity.status(HttpStatus.OK).body(cardTransactionResponseDto));
 
@@ -206,6 +199,48 @@ class PaymentBusinessTest{
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void testToResponseWithValidPayment() {
+
+        when(paymentConverter.convert(payment)).thenReturn(paymentDto);
+
+        ResponseEntity<?> response = paymentBusiness.toResponse(payment);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(paymentDto, response.getBody());
+    }
+
+    @Test
+    public void testNewCardTransactionRequestDto() {
+
+        CardTransactionRequestDto cardTransactionRequestDto = paymentBusiness.newCardTransactionRequestDto(requestPaymentDto);
+
+        assertNotNull(cardTransactionRequestDto);
+        assertEquals(requestPaymentDto.getCpf(), cardTransactionRequestDto.getCpf());
+        assertEquals(requestPaymentDto.getCardNumber(), cardTransactionRequestDto.getCardNumber());
+        assertEquals(requestPaymentDto.getExpirationDate(), cardTransactionRequestDto.getExpirationDate());
+        assertEquals(requestPaymentDto.getCvv(), cardTransactionRequestDto.getCvv());
+        assertEquals(requestPaymentDto.getValue(), cardTransactionRequestDto.getValue());
+    }
+
+    @Test
+    public void testNewPaymentDto() {
+
+        PaymentDto dto = paymentBusiness.newPaymentDto(requestPaymentDto, cardTransactionResponseDto);
+
+        assertNotNull(dto);
+        assertEquals(requestPaymentDto.getCpf(), dto.getCpf());
+        assertEquals(requestPaymentDto.getCardNumber(), dto.getCardNumber());
+        assertEquals(requestPaymentDto.getPaymentMethod(), dto.getPaymentMethod());
+        assertEquals(requestPaymentDto.getPaymentDescription(), dto.getPaymentDescription());
+        assertEquals(requestPaymentDto.getValue(), dto.getPaymentValue());
+        assertEquals(cardTransactionResponseDto.getPaymentId(), dto.getCardTransactionId());
+        assertEquals(PaymentStatus.APPROVED, dto.getPaymentStatus());
+
+        clearAllCaches();
     }
 
     private Payment newPayment(){
@@ -217,8 +252,8 @@ class PaymentBusinessTest{
         entity.setCardNumber("5568872479420825");
         entity.setPaymentMethod("Cartão de crédito");
         entity.setPaymentDescription("Compra de um livro");
-        entity.setPaymentValue(150.00);
-        entity.setTransactionDate(TimeUtils.now());
+        entity.setPaymentValue(19.99);
+        entity.setTransactionDate(now);
         entity.setCardTransactionId("123456");
         entity.setPaymentStatus(PaymentStatus.APPROVED);
 
@@ -226,11 +261,29 @@ class PaymentBusinessTest{
 
     }
 
+    private PaymentDto newPaymentDto(){
+
+        PaymentDto dto = new PaymentDto();
+
+        dto.setPaymentId(UUID.fromString("fcb829c9-f4f0-43b2-8647-8052806ba0b5"));
+        dto.setCpf("21910056081");
+        dto.setCardNumber("5568872479420825");
+        dto.setPaymentMethod("Cartão de crédito");
+        dto.setPaymentDescription("Compra de um livro");
+        dto.setPaymentValue(19.99);
+        dto.setTransactionDate(now);
+        dto.setCardTransactionId("123456");
+        dto.setPaymentStatus(PaymentStatus.APPROVED);
+
+        return dto;
+
+    }
+
     private CheckPaymentsDto checkPaymentsDto(){
 
         CheckPaymentsDto checkPaymentsDto = new CheckPaymentsDto();
 
-        checkPaymentsDto.setPaymentValue(150.00);
+        checkPaymentsDto.setPaymentValue(19.99);
         checkPaymentsDto.setPaymentMethod("Cartão de crédito");
         checkPaymentsDto.setPaymentDescription("Compra de um livro");
         checkPaymentsDto.setPaymentStatus(PaymentStatus.APPROVED);
@@ -273,7 +326,7 @@ class PaymentBusinessTest{
 
         cardTransactionResponseDto.setPaymentId("123456");
         cardTransactionResponseDto.setValue(19.99);
-        cardTransactionResponseDto.setCreated(TimeUtils.now().toString());
+        cardTransactionResponseDto.setCreated(String.valueOf(now));
 
         return cardTransactionResponseDto;
 
